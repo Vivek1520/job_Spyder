@@ -1,0 +1,112 @@
+<!--#currentworkingwith100%success-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Scraping</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="text"], button {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 300px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            display: none; /* Hide spinner by default */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .message {
+            display: none; /* Hide message by default */
+            text-align: center;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#submitBtn').click(function () {
+                $('.spinner').show(); // Show spinner when scraping starts
+                var messages = ['Please wait 10sec...', 'Still working 20sec...', 'Here We go 30sec...','Few Seconds to go 40sec...','Almost Done  50sec...'];
+                var currentIndex = 0;
+                var updateInterval = setInterval(updateMessage, 10000); // Update message every 10 seconds
+                $('.message').text('Scraping in progress.').show(); // Initial message
+                function updateMessage() {
+                    $('.message').text(messages[currentIndex]).show(); // Update message
+                    currentIndex = (currentIndex + 1) % messages.length; // Move to the next message
+                }
+                $.ajax({
+                    url: '/get_job_details',
+                    type: 'POST',
+                    data: $('form').serialize(),
+                    success: function (response) {
+                        clearInterval(updateInterval); // Stop updating message
+                        $('.spinner').hide(); // Hide spinner on successful scraping
+                        $('.message').text('Scraping completed. Please check your downloaded file.').show();
+                        window.location.href = response.download_url;
+                    },
+                    error: function (error) {
+                        clearInterval(updateInterval); // Stop updating message
+                        console.log(error);
+                        $('.spinner').hide(); // Hide spinner on error
+                        $('.message').text('Error occurred while scraping.').show();
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Job Spyder</h1>
+        <form>
+
+            <input type="text" name="job_title" placeholder="Job Title">
+            <input type="text" name="location" placeholder="Location">
+            <button type="button" id="submitBtn">Submit</button>
+        </form>
+        <div class="spinner"></div> <!-- Spinner element -->
+        <div class="message"></div> <!-- Message element -->
+    </div>
+</body>
+</html>
